@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Universo Sonoro</title>
+<style>
+  body {
+    margin: 0;
+    background: black;
+    overflow: hidden;
+    color: white;
+    font-family: monospace;
+  }
+  canvas {
+    display: block;
+  }
+  #poema {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 14px;
+    max-width: 90%;
+    opacity: 0.8;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="poema"></div>
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+let estrellas = [];
+for (let i = 0; i < 300; i++) {
+  estrellas.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.5,
+    v: Math.random() * 0.5
+  });
+}
+
+function dibujarEstrellas() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "white";
+  for (let e of estrellas) {
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, e.r, 0, Math.PI*2);
+    ctx.fill();
+    e.y += e.v;
+    if (e.y > canvas.height) e.y = 0;
+  }
+}
+
+let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function nota(frecuencia, duracion) {
+  let osc = audioCtx.createOscillator();
+  let gain = audioCtx.createGain();
+  osc.type = "sine";
+  osc.frequency.value = frecuencia;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duracion);
+  osc.stop(audioCtx.currentTime + duracion);
+}
+
+const frases = [
+  "Dios es un acorde que nunca termina.",
+  "Cada clic es un latido del universo.",
+  "El ego quiere hablar, pero la música ya dijo todo.",
+  "Escucha: el silencio también compone.",
+  "No hay final, solo cambio de compás.",
+  "Tu alma es un eco buscando su fuente."
+];
+
+function mostrarFrase() {
+  let f = frases[Math.floor(Math.random()*frases.length)];
+  document.getElementById("poema").innerText = f;
+}
+
+document.addEventListener("click", e => {
+  let f = 100 + Math.random() * 800;
+  nota(f, 1);
+  mostrarFrase();
+});
+
+document.addEventListener("keydown", e => {
+  let f = 150 + e.keyCode * 2;
+  nota(f, 0.5);
+  mostrarFrase();
+});
+
+function animar() {
+  dibujarEstrellas();
+  requestAnimationFrame(animar);
+}
+animar();
+</script>
+</body>
+</html>
